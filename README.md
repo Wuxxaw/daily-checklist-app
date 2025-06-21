@@ -32,7 +32,7 @@ A simple, responsive web app built with **React**, **Vite**, and **Tailwind CSS*
 
 ## 🌍 Live Demo
 
-[https://your-app-name.vercel.app](https://your-app-name.vercel.app)
+[https://daily-checklist-app-seven.vercel.app/](https://daily-checklist-app-seven.vercel.app/)
 
 ## 🛠 Planned Features
 
@@ -40,6 +40,3 @@ A simple, responsive web app built with **React**, **Vite**, and **Tailwind CSS*
 - Charts to visualise streaks & habits
 - User accounts via Supabase
 
----
-
-Built with ❤️ and caffeine.

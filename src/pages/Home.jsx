@@ -15,8 +15,8 @@ const Home = () => {
     const d2 = new Date(today);
     
     return [
-      { id: 1, name: 'Daily Exercise', description: '30 minutes of physical activity', icon: '💪', color: 'blue', duration: 66, completedDays: Array.from({ length: 15 }, (_, i) => new Date(d1.setDate(d1.getDate() - (i % 2 === 0 ? 1 : 2))).toISOString().split('T')[0]), createdAt: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString() },
-      { id: 2, name: 'Read 10 Pages', description: 'Daily reading habit', icon: '📚', color: 'green', duration: 66, completedDays: Array.from({ length: 20 }, (_, i) => new Date(d2.setDate(d2.getDate() - 1)).toISOString().split('T')[0]), createdAt: new Date(new Date().setDate(new Date().getDate() - 45)).toISOString() }
+      { id: 1, name: 'Daily Exercise', description: '30 minutes of physical activity', icon: '💪', color: 'emerald', duration: 66, completedDays: Array.from({ length: 15 }, (_, i) => new Date(d1.setDate(d1.getDate() - (i % 2 === 0 ? 1 : 2))).toISOString().split('T')[0]), createdAt: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString() },
+      { id: 2, name: 'Read 10 Pages', description: 'Daily reading habit', icon: '📚', color: 'blue', duration: 66, completedDays: Array.from({ length: 20 }, (_, i) => new Date(d2.setDate(d2.getDate() - 1)).toISOString().split('T')[0]), createdAt: new Date(new Date().setDate(new Date().getDate() - 45)).toISOString() }
     ];
   };
 
@@ -34,6 +34,10 @@ const Home = () => {
   const [archivedDuties, setArchivedDuties] = useState(() => getInitialData('archivedDutyData', []));
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [heroText, setHeroText] = useState(heroTexts[0]);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * heroTexts.length);
@@ -89,17 +93,76 @@ const Home = () => {
     setArchivedDuties(prev => prev.filter(d => d.id !== dutyId));
   };
 
+  const navigateMonth = (direction) => {
+    setSelectedMonth(prev => {
+      const newMonth = new Date(prev);
+      if (direction === 'prev') {
+        newMonth.setMonth(newMonth.getMonth() - 1);
+      } else {
+        newMonth.setMonth(newMonth.getMonth() + 1);
+      }
+      return newMonth;
+    });
+  };
+
+  const goToCurrentMonth = () => {
+    const today = new Date();
+    setSelectedMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+  };
+
+  const formatMonthYear = (date) => {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return selectedMonth.getMonth() === today.getMonth() && 
+           selectedMonth.getFullYear() === today.getFullYear();
+  };
+
   return (
     <div className="flex items-start justify-center p-4 pt-8 bg-gray-50 min-h-screen">
       <div className={`w-full transition-all duration-300 ${isCreatorOpen ? 'lg:mr-96' : ''}`}>
         <div className="max-w-7xl mx-auto mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Your Duties</h1>
-              <p className="text-sm text-gray-500 italic">{heroText}</p>
+          {/* Header - Single Line Layout */}
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+            <h1 className="text-2xl font-bold text-gray-800">Your Duties</h1>
+            
+            <div className="flex flex-col items-center space-y-1">
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => navigateMonth('prev')}
+                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                >
+                  ‹
+                </button>
+                
+                <span className="text-lg font-medium text-gray-700 min-w-[120px] text-center">
+                  {formatMonthYear(selectedMonth)}
+                </span>
+                
+                <button 
+                  onClick={() => navigateMonth('next')}
+                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                >
+                  ›
+                </button>
+              </div>
+              
+              {!isCurrentMonth() && (
+                <button 
+                  onClick={goToCurrentMonth}
+                  className="text-sm text-blue-600 hover:text-blue-700 underline px-2 py-1"
+                >
+                  Back to Current Month
+                </button>
+              )}
             </div>
-            <button onClick={() => setIsCreatorOpen(true)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold shadow-sm hover:shadow-md">New Duty</button>
+            
+            <button onClick={() => setIsCreatorOpen(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-semibold shadow-sm hover:shadow-md">New Duty</button>
           </div>
+
+          <p className="text-sm text-gray-500 italic mb-6">{heroText}</p>
         </div>
 
         <div className="max-w-7xl mx-auto">
@@ -112,7 +175,15 @@ const Home = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {duties.map(duty => <DutyCard key={duty.id} duty={duty} onToggleDay={handleToggleDay} onDelete={handleDeleteDuty} />)}
+              {duties.map(duty => (
+                <DutyCard 
+                  key={duty.id} 
+                  duty={duty} 
+                  selectedMonth={selectedMonth}
+                  onToggleDay={handleToggleDay} 
+                  onDelete={handleDeleteDuty} 
+                />
+              ))}
             </div>
           )}
         </div>

@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Helper to get the Monday of a given date's week
-const getMonday = (d) => {
-  d = new Date(d);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
-  return new Date(d.setDate(diff));
-};
-
-const DutyCard = ({ duty, onToggleDay, onDelete }) => {
+const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [dontShowWarning, setDontShowWarning] = useState(() => {
@@ -40,22 +32,102 @@ const DutyCard = ({ duty, onToggleDay, onDelete }) => {
       setSelectedDate(null);
     }
   };
-  
-  const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const startDate = new Date(duty.createdAt);
-  startDate.setHours(0, 0, 0, 0);
 
-  const calendarDays = [];
-  let currentDate = new Date(startDate);
-  while (currentDate <= today) {
-    calendarDays.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  const firstDayOfWeek = (startDate.getDay() + 6) % 7;
+  const renderCalendarGrid = () => {
+    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Get the first day of the selected month
+    const firstDayOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
+    
+    // Get the last day of the selected month
+    const lastDayOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+    
+    // Calculate how many days to show before the 1st (to align with Monday)
+    const firstDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+    
+    // Calculate total days in the month
+    const daysInMonth = lastDayOfMonth.getDate();
+    
+    // Calculate total grid cells needed (including filler days)
+    const totalCells = firstDayOfWeek + daysInMonth;
+    const rowsNeeded = Math.ceil(totalCells / 7);
+    const totalGridCells = rowsNeeded * 7;
+    
+    const gridItems = [];
+    
+    // Add day labels
+    dayLabels.forEach((label, index) => {
+      gridItems.push(
+        <div key={`day-label-${index}`} className="w-5 h-5 flex items-center justify-center">
+          <span className="text-xs font-mono text-gray-400">{label}</span>
+        </div>
+      );
+    });
+    
+    // Add all grid cells (filler + actual days)
+    for (let i = 0; i < totalGridCells; i++) {
+      const isFillerDay = i < firstDayOfWeek || i >= firstDayOfWeek + daysInMonth;
+      const dayNumber = i - firstDayOfWeek + 1;
+      
+      if (isFillerDay) {
+        // Render blank space for filler days
+        gridItems.push(
+          <div key={`filler-${i}`} className="w-5 h-5"></div>
+        );
+      } else {
+        // Render actual day
+        const currentDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), dayNumber);
+        const dateString = currentDate.toISOString().split('T')[0];
+        const isCompleted = duty.completedDays.includes(dateString);
+        const isToday = currentDate.getTime() === today.getTime();
+        const isFuture = currentDate > today;
+        
+        let buttonClass = 'w-5 h-5 rounded-full transition-all duration-150 flex items-center justify-center border-2';
+        
+        if (isToday) {
+          buttonClass += ` border-${duty.color}-600 shadow-lg shadow-${duty.color}-200`;
+        } else {
+          buttonClass += ` border-${duty.color}-300`;
+        }
+        
+        if (isFuture) {
+          buttonClass += ' bg-white cursor-not-allowed opacity-50';
+        } else if (isCompleted) {
+          buttonClass += ` bg-${duty.color}-500 border-${duty.color}-500 text-white`;
+        } else {
+          buttonClass += ' bg-white hover:bg-gray-50';
+        }
+        
+        const formatDateTooltip = (date) => {
+          return date.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        };
+        
+        gridItems.push(
+          <button
+            key={`day-${dayNumber}`}
+            onClick={() => !isFuture && handleSquareClick(currentDate)}
+            className={buttonClass}
+            disabled={isFuture}
+            title={formatDateTooltip(currentDate)}
+          >
+            {isCompleted && <span className="text-xs font-bold">✓</span>}
+          </button>
+        );
+      }
+    }
+    
+    return (
+      <div className="grid grid-cols-7 gap-1">
+        {gridItems}
+      </div>
+    );
+  };
   
   return (
     <>
@@ -81,42 +153,7 @@ const DutyCard = ({ duty, onToggleDay, onDelete }) => {
         </div>
         
         <div className="mt-auto pt-2">
-          <div className="grid grid-cols-7 gap-1">
-            {dayLabels.map((label, index) => (
-              <div key={`day-label-${index}`} className="w-5 h-5 flex items-center justify-center">
-                <span className="text-xs font-mono text-gray-400">{label}</span>
-              </div>
-            ))}
-            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-              <div key={`empty-${i}`} className="w-5 h-5" />
-            ))}
-            {calendarDays.map(date => {
-              const dateString = date.toISOString().split('T')[0];
-              const isCompleted = duty.completedDays.includes(dateString);
-              const isToday = date.getTime() === today.getTime();
-
-              let buttonClass = 'w-5 h-5 rounded-full transition-all duration-150 flex items-center justify-center';
-              if (isToday) {
-                buttonClass += ' ring-2 ring-blue-500';
-              }
-              if (isCompleted) {
-                buttonClass += ` bg-${duty.color}-500 hover:bg-${duty.color}-600 text-white`;
-              } else {
-                buttonClass += ' bg-gray-200 hover:bg-gray-300';
-              }
-              
-              return (
-                <button
-                  key={dateString}
-                  onClick={() => handleSquareClick(date)}
-                  className={buttonClass}
-                  title={date.toDateString()}
-                >
-                  {isCompleted && <span className="text-xs font-bold">✓</span>}
-                </button>
-              );
-            })}
-          </div>
+          {renderCalendarGrid()}
         </div>
       </div>
 

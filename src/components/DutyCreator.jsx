@@ -11,14 +11,15 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
   });
 
   const colors = [
-    { name: 'blue', class: 'bg-blue-500', border: 'border-blue-500' },
-    { name: 'green', class: 'bg-green-500', border: 'border-green-500' },
-    { name: 'purple', class: 'bg-purple-500', border: 'border-purple-500' },
+    { name: 'slate', class: 'bg-slate-500', border: 'border-slate-500' },
     { name: 'red', class: 'bg-red-500', border: 'border-red-500' },
-    { name: 'yellow', class: 'bg-yellow-500', border: 'border-yellow-500' },
-    { name: 'pink', class: 'bg-pink-500', border: 'border-pink-500' },
-    { name: 'indigo', class: 'bg-indigo-500', border: 'border-indigo-500' },
-    { name: 'teal', class: 'bg-teal-500', border: 'border-teal-500' }
+    { name: 'orange', class: 'bg-orange-500', border: 'border-orange-500' },
+    { name: 'green', class: 'bg-green-500', border: 'border-green-500' },
+    { name: 'emerald', class: 'bg-emerald-500', border: 'border-emerald-500' },
+    { name: 'cyan', class: 'bg-cyan-500', border: 'border-cyan-500' },
+    { name: 'blue', class: 'bg-blue-500', border: 'border-blue-500' },
+    { name: 'violet', class: 'bg-violet-500', border: 'border-violet-500' },
+    { name: 'pink', class: 'bg-pink-500', border: 'border-pink-500' }
   ];
 
   const icons = ['📝', '💪', '🧠', '💧', '📚', '🏃‍♂️', '🧘‍♀️', '🎯', '🔥', '⭐', '🌱', '⚡'];

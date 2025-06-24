@@ -1,29 +1,18 @@
-import React, { useState } from 'react';
-import Home from './pages/Home';
-import Stats from './pages/Stats';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Home from './pages/Home.jsx';
+import Login from './pages/Login.jsx';
 import Navbar from './components/Navbar';
 
-function App() {
-  const [activeTab, setActiveTab] = useState('checklist');
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'stats':
-        return <Stats />;
-      case 'checklist':
-      default:
-        return <Home />;
-    }
-  };
-
+export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="transition-opacity duration-300 ease-in-out">
-        {renderContent()}
-      </div>
-    </div>
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

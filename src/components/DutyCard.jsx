@@ -11,6 +11,27 @@ const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
     localStorage.setItem('dontShowOldDateWarning', dontShowWarning);
   }, [dontShowWarning]);
 
+  // Safely get completed days array (handles both local and Supabase field names)
+  const getCompletedDays = () => {
+    // Handle both camelCase (local) and snake_case (Supabase) field names
+    const completedDays = duty.completedDays || duty.completed_days || [];
+    if (!Array.isArray(completedDays)) {
+      console.warn('Duty has invalid completedDays format:', duty);
+      return [];
+    }
+    return completedDays;
+  };
+
+  // Safely get duty properties with defaults
+  const getDutyProperty = (property, defaultValue) => {
+    const value = duty[property];
+    if (value === undefined || value === null) {
+      console.warn(`Duty missing ${property}:`, duty);
+      return defaultValue;
+    }
+    return value;
+  };
+
   const handleSquareClick = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -80,22 +101,25 @@ const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
         // Render actual day
         const currentDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), dayNumber);
         const dateString = currentDate.toISOString().split('T')[0];
-        const isCompleted = duty.completedDays.includes(dateString);
+        const completedDays = getCompletedDays();
+        const isCompleted = completedDays.includes(dateString);
         const isToday = currentDate.getTime() === today.getTime();
         const isFuture = currentDate > today;
         
+        let buttonStyle = {
+          borderColor: duty.color,
+        };
         let buttonClass = 'w-5 h-5 rounded-full transition-all duration-150 flex items-center justify-center border-2';
-        
         if (isToday) {
-          buttonClass += ` border-${duty.color}-600 shadow-lg shadow-${duty.color}-200`;
-        } else {
-          buttonClass += ` border-${duty.color}-300`;
+          buttonClass += ' shadow-lg';
         }
-        
         if (isFuture) {
           buttonClass += ' bg-white cursor-not-allowed opacity-50';
         } else if (isCompleted) {
-          buttonClass += ` bg-${duty.color}-500 border-${duty.color}-500 text-white`;
+          buttonClass += ' text-white';
+          buttonStyle.backgroundColor = duty.color;
+          buttonStyle.borderColor = duty.color;
+          buttonStyle.color = getContrastYIQ(duty.color);
         } else {
           buttonClass += ' bg-white hover:bg-gray-50';
         }
@@ -113,6 +137,7 @@ const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
             key={`day-${dayNumber}`}
             onClick={() => !isFuture && handleSquareClick(currentDate)}
             className={buttonClass}
+            style={buttonStyle}
             disabled={isFuture}
             title={formatDateTooltip(currentDate)}
           >
@@ -129,27 +154,49 @@ const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
     );
   };
   
+  // Get safe values for display
+  const completedDays = getCompletedDays();
+  const dutyName = getDutyProperty('name', 'Untitled Duty');
+  const dutyIcon = getDutyProperty('icon', '📝');
+  const dutyColor = getDutyProperty('color', '#1e293b');
+  const dutyDuration = getDutyProperty('duration', 66);
+  const dutyDescription = getDutyProperty('description', '');
+  
+  // Helper for contrast text color
+  function getContrastYIQ(hexcolor) {
+    hexcolor = hexcolor.replace('#', '');
+    if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(x => x + x).join('');
+    const r = parseInt(hexcolor.substr(0,2),16);
+    const g = parseInt(hexcolor.substr(2,2),16);
+    const b = parseInt(hexcolor.substr(4,2),16);
+    const yiq = ((r*299)+(g*587)+(b*114))/1000;
+    return (yiq >= 128) ? '#222' : '#fff';
+  }
+
   return (
     <>
-      <div className={`bg-white rounded-lg shadow-md p-4 border-l-4 border-${duty.color}-500 flex flex-col h-full`}>
+      <div
+        className="bg-white rounded-lg shadow-md p-4 flex flex-col h-full"
+        style={{ borderLeft: `6px solid ${dutyColor}` }}
+      >
         <div className="flex-grow">
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center">
-              <span className="text-2xl mr-3">{duty.icon}</span>
+              <span className="text-2xl mr-3">{dutyIcon}</span>
               <div>
-                <h3 className="text-md font-semibold text-gray-800">{duty.name}</h3>
+                <h3 className="text-md font-semibold text-gray-800">{dutyName}</h3>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
-                {duty.completedDays.length}/{duty.duration}
+                {completedDays.length}/{dutyDuration}
               </span>
               <button onClick={() => onDelete(duty.id)} className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50" title="Delete duty">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mb-3">{duty.description}</p>
+          <p className="text-xs text-gray-500 mb-3">{dutyDescription}</p>
         </div>
         
         <div className="mt-auto pt-2">
@@ -185,7 +232,8 @@ const DutyCard = ({ duty, selectedMonth, onToggleDay, onDelete }) => {
               </button>
               <button 
                 onClick={handleConfirmToggle} 
-                className={`flex-1 px-4 py-2 text-white bg-${duty.color}-500 hover:bg-${duty.color}-600 rounded-md`}
+                className="flex-1 px-4 py-2 rounded-md"
+                style={{ backgroundColor: dutyColor, color: getContrastYIQ(dutyColor) }}
               >
                 Update
               </button>

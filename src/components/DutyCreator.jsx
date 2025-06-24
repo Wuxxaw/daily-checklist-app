@@ -1,28 +1,25 @@
 import React, { useState } from 'react';
 
+const COLOR_PALETTE = [
+  '#1e293b', '#991b1b', '#92400e', '#3f6212', '#065f46', '#155e75',
+  '#1e40af', '#6b21a8', '#9d174d', '#0f766e', '#ca8a04', '#b91c1c',
+  '#4b5563', '#16a34a', '#1d4ed8', '#be185d', '#db2777', '#7e22ce',
+];
+
+const ICONS = [
+  '📝', '💪', '🧠', '💧', '📚', '🏃‍♂️', '🧘‍♀️', '🎯', '🔥', '⭐', '🌱', '⚡',
+  '🚴', '🏊', '🛏️', '🧘', '🥗', '🏋️'
+];
+
 const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDeleteArchived }) => {
   const [view, setView] = useState('create');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     icon: '📝',
-    color: 'blue',
+    color: COLOR_PALETTE[0],
     duration: 66
   });
-
-  const colors = [
-    { name: 'slate', class: 'bg-slate-500', border: 'border-slate-500' },
-    { name: 'red', class: 'bg-red-500', border: 'border-red-500' },
-    { name: 'orange', class: 'bg-orange-500', border: 'border-orange-500' },
-    { name: 'green', class: 'bg-green-500', border: 'border-green-500' },
-    { name: 'emerald', class: 'bg-emerald-500', border: 'border-emerald-500' },
-    { name: 'cyan', class: 'bg-cyan-500', border: 'border-cyan-500' },
-    { name: 'blue', class: 'bg-blue-500', border: 'border-blue-500' },
-    { name: 'violet', class: 'bg-violet-500', border: 'border-violet-500' },
-    { name: 'pink', class: 'bg-pink-500', border: 'border-pink-500' }
-  ];
-
-  const icons = ['📝', '💪', '🧠', '💧', '📚', '🏃‍♂️', '🧘‍♀️', '🎯', '🔥', '⭐', '🌱', '⚡'];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -34,7 +31,7 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
         createdAt: new Date().toISOString()
       };
       onSave(newDuty);
-      setFormData({ name: '', description: '', icon: '📝', color: 'blue', duration: 66 });
+      setFormData({ name: '', description: '', icon: '📝', color: COLOR_PALETTE[0], duration: 66 });
       onClose();
     }
   };
@@ -52,7 +49,6 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
         className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
         onClick={onClose}
       />
-      
       {/* Sidebar */}
       <div className={`fixed top-0 right-0 h-full w-full lg:w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -75,7 +71,6 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
               <button onClick={() => setView('re-add')} className={`px-3 py-2 text-sm font-medium ${view === 're-add' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>Add Existing</button>
             </div>
           </div>
-          
           <div className="flex-grow overflow-y-auto pr-2">
             {view === 'create' ? (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -91,7 +86,7 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Choose Icon</label>
                   <div className="grid grid-cols-6 gap-1">
-                    {icons.map((icon) => (
+                    {ICONS.map((icon) => (
                       <button key={icon} type="button" onClick={() => handleInputChange('icon', icon)} className={`p-2 text-lg rounded-md border-2 transition-colors duration-200 ${formData.icon === icon ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}>
                         {icon}
                       </button>
@@ -100,9 +95,9 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Choose Color</label>
-                  <div className="grid grid-cols-8 gap-2">
-                    {colors.map((color) => (
-                      <button key={color.name} type="button" onClick={() => handleInputChange('color', color.name)} className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${color.class} ${formData.color === color.name ? 'border-gray-800 scale-110' : 'border-gray-300 hover:scale-105'}`} />
+                  <div className="grid grid-cols-6 gap-2">
+                    {COLOR_PALETTE.map((hex) => (
+                      <button key={hex} type="button" onClick={() => handleInputChange('color', hex)} className={`w-8 h-8 rounded-full border-2 transition-all duration-200`} style={{ backgroundColor: hex, borderColor: formData.color === hex ? '#1e293b' : '#e5e7eb', transform: formData.color === hex ? 'scale(1.15)' : 'scale(1)' }} />
                     ))}
                   </div>
                 </div>
@@ -130,7 +125,7 @@ const DutyCreator = ({ isOpen, onClose, onSave, archivedDuties, onReAdd, onDelet
                         <span className="text-sm font-medium text-gray-800">{duty.name}</span>
                       </div>
                       <div className="flex space-x-2">
-                        <button onClick={() => onReAdd(duty.id)} className="text-sm text-blue-600 hover:underline">Re-add</button>
+                        <button onClick={() => onReAdd(duty.id)} className="text-sm text-blue-600 hover:underline">Add</button>
                         <button onClick={() => onDeleteArchived(duty.id)} className="text-gray-400 hover:text-red-500">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
